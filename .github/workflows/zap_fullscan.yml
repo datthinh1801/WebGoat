@@ -13,19 +13,19 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Build a spring-boot docker image
+      - name: Build a docker image
         run: docker build -t webgoat .
         
       - name: Create a docker network
         run: docker network create --subnet=172.18.0.0/16 zapscan
         
-      - name: Run the spring-boot container
+      - name: Run the container
         run: docker run -d --rm --network zapscan --ip 172.18.0.100 -p 80:8888 -p 8080:8080 -p 9090:9090 --name webgoat webgoat
         
-      - name: Wait for the spring-boot container to completely start
+      - name: Wait for the container to completely start
         run: sleep 60m
         
-      - name: Test the spring-boot container
+      - name: Test the container
         run: curl http://localhost:8080/WebGoat
         
       - name: Pull the ZAP docker image
