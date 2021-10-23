@@ -20,15 +20,15 @@ jobs:
         run: docker network create --subnet=172.18.0.0/16 zapscan
         
       - name: Run the container
-        run: docker run -d --rm --network zapscan --ip 172.18.0.100 -p 8080:8080 --name webgoat webgoat
+        run: docker run -d --rm --network zapscan --ip 172.18.0.100 -p 80:8888 -p 8080:8080 -p 9090:9090 --name webgoat webgoat
         
       - name: Wait for the container to completely start
-        run: sleep 5m
+        run: sleep 60m
         
       - name: Test the running container
-        run: curl http://localhost:8080/rest/demo
+        run: curl http://localhost:8080/WebGoat
         
       - name: ZAP scan
         run: |
           docker pull owasp/zap2docker-stable
-          docker run --rm -t owasp/zap2docker-stable zap-cli quick-scan --self-contained --start-options '-config api.disablekey=true' http://172.18.0.100:8080/
+          docker run --rm -t owasp/zap2docker-stable zap-cli quick-scan --self-contained --start-options '-config api.disablekey=true' http://172.18.0.100:8080/WebGoat

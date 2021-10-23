@@ -10,4 +10,9 @@ COPY webgoat-integration-tests ./webgoat-integration-tests
 COPY webgoat-lessons ./webgoat-lessons
 COPY webgoat-server ./webgoat-server
 COPY webwolf ./webwolf
-CMD mvn clean install -DskipTest -f ./pom.xml
+RUN mvn clean install -DskipTest -f ./pom.xml
+
+EXPOSE 8080
+EXPOSE 9090
+
+CMD mvn -pl webgoat-server spring-boot:run

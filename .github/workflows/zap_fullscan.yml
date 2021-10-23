@@ -1,0 +1,47 @@
+name: OWASP ZAP Full Scan
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  ZAP_fullscan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Build a spring-boot docker image
+        run: docker build -t webgoat .
+        
+      - name: Create a docker network
+        run: docker network create --subnet=172.18.0.0/16 zapscan
+        
+      - name: Run the spring-boot container
+        run: docker run -d --rm --network zapscan --ip 172.18.0.100 -p 80:8888 -p 8080:8080 -p 9090:9090 --name webgoat webgoat
+        
+      - name: Wait for the spring-boot container to completely start
+        run: sleep 60m
+        
+      - name: Test the spring-boot container
+        run: curl http://localhost:8080/WebGoat
+        
+      - name: Pull the ZAP docker image
+        run: docker pull owasp/zap2docker-stable
+        
+      - name: Create an artefact directory
+        run: |
+          mkdir out
+          chmod 777 out
+          ls -la
+        
+      - name: Perform an active scan
+        run: docker run --rm -v $(pwd)/out:/zap/wrk/:rw --network zapscan --name zap owasp/zap2docker-stable zap-full-scan.py -t http://172.18.0.100:8080/WebGoat -r report.html || true
+          
+      - name: Save report as an artefact
+        uses: actions/upload-artifact@v2
+        with:
+          name: zap_fullscan_report
+          path: out/report.html
