@@ -1,0 +1,34 @@
+name: OWASP ZAP Baseline Scan
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  ZAP_baseline_scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Build a docker image
+        run: docker build -t webgoat ./docker
+        
+      - name: Create a docker network
+        run: docker network create --subnet=172.18.0.0/16 zapscan
+        
+      - name: Run the container
+        run: docker run -d --rm --network zapscan --ip 172.18.0.100 -p 8080:8080 --name webgoat webgoat
+        
+      - name: Wait for the container to completely start
+        run: sleep 5m
+        
+      - name: Test the running container
+        run: curl http://localhost:8080/rest/demo
+        
+      - name: ZAP scan
+        run: |
+          docker pull owasp/zap2docker-stable
+          docker run --rm -t owasp/zap2docker-stable zap-cli quick-scan --self-contained --start-options '-config api.disablekey=true' http://172.18.0.100:8080/
